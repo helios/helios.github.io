@@ -94,3 +94,5 @@ I tested the it on my server ubuntu 14.04 (bash 4) and on Mac (bash3 and bash4)
 This script can introduce security risks. Maybe dumping the generated fucntions/aliases and let the user decide which docker image can override the system is an option.
 
 Note: I wrote this post after opening an [issue](https://github.com/docker/docker/issues/20702), submitting a [pull request](https://github.com/docker/docker/pull/20704) and commenting with Docker's people ([@thaJeztah](http://github.com/thaJeztah), [@HackToday](http://github.com/HackToday), [@calavera](http://github.com/calavera), [@albers](http://github.com/albers)); Thanks to them I look at my idea from a different angle.
+
+If you have comments please [open an issue for DoShIn](https://github.com/helios/doshin/issues)
