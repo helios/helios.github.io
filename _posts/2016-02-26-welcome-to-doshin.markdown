@@ -4,82 +4,93 @@ title:  "Docker Shell Integration (DoShIn)"
 date:   2016-02-26 22:33:45 +0100
 categories: doshin update
 ---
-Note: I wrote this post after opening an [issue](https://github.com/docker/docker/issues/20702), submitting a [pull request](https://github.com/docker/docker/pull/20704) and commenting with Docker's people ( @thaJeztah, @HackToday, @calavera, @albers); it was very useful.
 
-I want to start a container simply typing the name of the image without using the verbose Docker's cli. DoShIn will scan the Docker images and create shell functions with the name of the tags.
+I want to start a container simply typing the name of the image without using the verbose Docker's cli. [DoShIn](https://github.com/helios/doshin) will scan the Docker images and create shell functions/alias with the name of the tags.
 
 Just type  `ubuntu` in the bash and docker will instantiate a new container.
 
-It i
+This can be strange but if you follow the Docker philosofy to create a single image with a precise purpose/task you will end up with an image for a single application ( redis, postgresql, mysql, ...) maybe with your own ENTRYPOINT. So for running your application you will write 
 
-So, why this ? A bit of background. 
+`docker run ALL_YOUR_PARAMETERS youruser/redis APP_PARAMETERS`
 
-With the Docker Shell Integration you can run an image diretly typing the name of the image. 
-Bash completion works out of the box and you can browse them, depending on your settings.
-You can run a container simply calling the name of the image, i.e.
+assuming that you want to run some application by default with Docker, it would be a lot easier to write
 
-  ubuntu
+`redis APP_PARAMTERS`
 
-  ubuntu echo "Hello World"
+to achieve this you can simply create an alias
 
-a container will be started with default parameters:
+`alias redis="docker run ALL_YOUR_PARAMETERS youruser/redis"`
 
+If you maintain many images and/or you have multiple users that collaborate with you, it is also required to maintain a separate archive of aliases somewhere to be shared with the users.
+
+Just a bit of background, I am working on a research center and we need to use and maintain software with multiple versions, so that users can pick up exactely the version of the software they need for their analyses. It is also very useful in case of reproducing/replicating scientific analyses. There are many solution for this purpose
+
+* [module](http://modules.sourceforge.net/): this is the current impementation
+* full path: calling explicitly the path of every binary neded, very long commands
+* [Guix](https://www.gnu.org/software/guix/): a bit complicated but it is improving quickly and the number of software is growing
+* [Anaconda](https://www.continuum.io/why-anaconda): primarly developed for Python there is a project called [Bioconda](https://bioconda.github.io/) for Bioinformatics software.
+* Docker: using different images for every version. I decided to test Docker for our Bioinformatics pipelines and so I created a repository [bio-docker](https://github.com/helios/bio-docker) with specific images for each scientific software/version installed in our cluster.
+
+Note: mine is not an official project is more our environment ported to Docker. On github there is another [BioDocker](https://github.com/BioDocker) projects maintained, maybe I will contribute to it. 
+
+DoShIn overrides the local installation giving precedence to the docker images. 
+
+{% highlight bash %}
+helios/sicer  1.1
+helios/tophat 2.1.0
+tophat  latest
+helios/picard 2.0.1
+helios/bowtie2  2.2.6
+helios/stringtie  1.2.1
+helios/trimmomatic  0.33
+helios/vcftools 0.1.14
+helios/bcftools 1.3
+helios/bcftools 1.2
+helios/samtools 1.3
+samtools latest
+helios/samtools 1.2
+helios/htslib 1.3
+helios/macs2  2.1.0
+helios/gatk 3.3.0
+helios/fastqc 0.11.3
+helios/bedtools 2.24.0
+helios/cutadapt 1.8
+helios/rsem 1.2.26
+helios/star 2.5.1a
+{% endhighlight %}
+
+a nice example is samtools. DoShIn will create multiple functions:
+
+`helios_samtools_1.3`
+`helios_samtools_1.2`
+`samtools_latest`
+`samtools`
+
+and the user can call the image as a regular local application. I have not yet tested the ability to deploy the docker in a [Swarm](https://docs.docker.com/swarm/).
+
+I think that this, at least at my workplace, can be a solution to reduce the friction between the introduction of docker and those user that do not care about it but just want to run the applications wherever is going to run.
+
+Note on Security: as [@albers](http://github.com/albers) [pointed out](https://github.com/docker/docker/pull/20704#issuecomment-189170800) there can be a security issue is someone tag an images with a name of another system program.
+
+
+A container will be started with default parameters:
+{% highlight bash %}
   --rm
   -u user_id:user_group_id
   -i
   -t
-
-The user can set common parameters for all containers using the env variable DOCKER_OPTS_USER.
-
-Why this? If you have images that are considered "applications" you can run them directly form 
-the shell as normal application but running inside a container; look at CMD or ENTRYPOINT in the Docker
-official docs.
-
-These are your images now available from the shell:
-
-$(echo ${list_images} | tr " /" "_")
-
-Images tagged as latest can be called omitting "latest".
-
-
-
-
-What did you do?
-I expose the name of the images and their tags as bash/shell function so that the user can directly run them from the shell i.e.:
-$> ubuntu_latest echo "Hello World".
-This can be useful if you want to use images/container as local binaries but without typing the whole docker run ... which can be very long sometimes. Also the bash completion works, so is simpler to explore and run your images.
-
-How did you do it?
-Creating bash functions (__docker_shell_...) to extract images names and tags using docker and wrap them in simple bash functions, when the functions are loaded from the shell the user need only to run 
-docker_shell_images_integration
-
-I placed the function into contrib/completion/bash/docker because I think it was the simple place ready to host my enhancement.
-I placed my functions at the bottom of the file to separate them from the original file.
-
-How do I see it or verify it? if contrib/completion/bash/docker is run automatically by the system then you just need to type docker_shell_images_integration and then call one of your images form the shell ubuntu
-Note: I tested the it on my server ubuntu 14.04 (bash 4) and on Mac (bash3 and bash4)
-
-A picture of a cute animal (not mandatory but encouraged) Pic
-Signed-off-by: Raoul Jean Pierre Bonnal raoul.bonnal@gmail.com #
-
-
-
-You’ll find this post in your `_posts` directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run `jekyll serve`, which launches a web server and auto-regenerates your site when a file is updated.
-
-To add new posts, simply add a file in the `_posts` directory that follows the convention `YYYY-MM-DD-name-of-post.ext` and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.
-
-Jekyll also offers powerful support for code snippets:
-
-{% highlight ruby %}
-def print_hi(name)
-  puts "Hi, #{name}"
-end
-print_hi('Tom')
-#=> prints 'Hi, Tom' to STDOUT.
 {% endhighlight %}
 
-Check out the [Jekyll docs][jekyll-docs] for more info on how to get the most out of Jekyll. File all bugs/feature requests at [Jekyll’s GitHub repo][jekyll-gh]. If you have questions, you can ask them on [Jekyll Talk][jekyll-talk].
+The user can set common parameters for all containers using the env variable `DOCKER_OPTS_USER`.
 
-[jekyll-docs]: http://jekyllrb.com/docs/home
-[jekyll-gh]:   https://github.com/jekyll/jekyll
-[jekyll-talk]: https://talk.jekyllrb.com/
+DoShIn is hosted [here](https://github.com/helios/doshin) you can load the script in your bash and enable the functionalities with 
+
+`docker_shell_images_integration`
+
+and then call one of your images form the shell ubuntu
+
+I tested the it on my server ubuntu 14.04 (bash 4) and on Mac (bash3 and bash4)
+
+This script can introduce security risks. Maybe dumping the generated fucntions/aliases and let the user decide which docker image can override the system is an option.
+
+Note: I wrote this post after opening an [issue](https://github.com/docker/docker/issues/20702), submitting a [pull request](https://github.com/docker/docker/pull/20704) and commenting with Docker's people ([@thaJeztah](http://github.com/thaJeztah), [@HackToday](http://github.com/HackToday), [@calavera](http://github.com/calavera), [@albers](http://github.com/albers)); Thanks to them I look at my idea from a different angle.
