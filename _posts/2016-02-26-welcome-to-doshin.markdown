@@ -21,7 +21,7 @@ to achieve this you can simply create an alias
 
 `alias redis="docker run ALL_YOUR_PARAMETERS youruser/redis"`
 
-If you maintain many images and/or you have multiple users that collaborate with you, it is also required to maintain a separate archive of aliases somewhere to be shared with the users.
+If you maintain many images and/or you have multiple users that collaborate with you, it is also required to maintain a separate archive of aliases somewhere to be shared with the users, i.e. [dockerfunc](https://github.com/jfrazelle/dotfiles/blob/a0b0ca56070e4cd9fbc0c9f5837e5fb8c145c06e/.dockerfunc#L259).
 
 Just a bit of background, I am working on a research center and we need to use and maintain software with multiple versions, so that users can pick up exactely the version of the software they need for their analyses. It is also very useful in case of reproducing/replicating scientific analyses. There are many solution for this purpose
 
